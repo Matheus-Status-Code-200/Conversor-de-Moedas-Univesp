@@ -1,7 +1,6 @@
 {
-  "buildCommand": "",
-  "outputDirectory": ".",
-  "framework": "static",
-  "rewrites": [{ "source": "/(.*)", "destination": "/$1" }]
+  "builds": [{ "src": "index.html", "use": "@vercel/static" }],
+  "routes": [{ "src": "/(.*)", "dest": "/index.html" }]
 }
+
 
