@@ -1,7 +1,6 @@
 // Inicializar o cliente Supabase
-const SUPABASE_URL = "https://vzpkmfwmghxehxxsodmt.supabase.co"
-const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6cGttZndtZ2h4ZWh4eHNvZG10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3MzYwNzUsImV4cCI6MjA1NzMxMjA3NX0.Zehujl1ttRAsnP_N_Y3NmbFlUNIgHHBAt2Mfe5e_kiM"
+const SUPABASE_URL = {SUA_URL}
+const SUPABASE_KEY = {SUA_CHAVE_DO_SUPABASE}
 // Corrigir a inicialização do cliente Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
