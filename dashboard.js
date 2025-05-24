@@ -20,32 +20,23 @@ const currencyFlagElement = document.getElementById("currency-flag")
 const popularRatesElement = document.getElementById("popular-rates")
 const conversionHistoryElement = document.getElementById("conversion-history")
 
-// Dados de moedas
+// Dados de moedas com flags do Flaticon
 const currencies = {
-  USD: { name: "Dólar Americano", symbol: "$", flag: "🇺🇸" },
-  EUR: { name: "Euro", symbol: "€", flag: "🇪🇺" },
-  GBP: { name: "Libra Esterlina", symbol: "£", flag: "🇬🇧" },
-  JPY: { name: "Iene Japonês", symbol: "¥", flag: "🇯🇵" },
-  ARS: { name: "Peso Argentino", symbol: "$", flag: "🇦🇷" },
-  CAD: { name: "Dólar Canadense", symbol: "$", flag: "🇨🇦" },
-  AUD: { name: "Dólar Australiano", symbol: "$", flag: "🇦🇺" },
-  CNY: { name: "Yuan Chinês", symbol: "¥", flag: "🇨🇳" },
+  USD: { name: "Dólar Americano", symbol: "$", flag: "https://cdn-icons-png.flaticon.com/512/206/206626.png" },
+  EUR: { name: "Euro", symbol: "€", flag: "https://cdn-icons-png.flaticon.com/512/330/330426.png" },
+  GBP: { name: "Libra Esterlina", symbol: "£", flag: "https://cdn-icons-png.flaticon.com/512/330/330425.png" },
+  JPY: { name: "Iene Japonês", symbol: "¥", flag: "https://cdn-icons-png.flaticon.com/512/330/330622.png" },
+  ARS: { name: "Peso Argentino", symbol: "$", flag: "https://cdn-icons-png.flaticon.com/512/330/330487.png" },
+  CAD: { name: "Dólar Canadense", symbol: "$", flag: "https://cdn-icons-png.flaticon.com/512/330/330442.png" },
+  AUD: { name: "Dólar Australiano", symbol: "$", flag: "https://cdn-icons-png.flaticon.com/512/330/330451.png" },
+  CNY: { name: "Yuan Chinês", symbol: "¥", flag: "https://cdn-icons-png.flaticon.com/512/330/330651.png" },
+  CHF: { name: "Franco Suíço", symbol: "Fr", flag: "https://cdn-icons-png.flaticon.com/512/330/330480.png" },
+  MXN: { name: "Peso Mexicano", symbol: "$", flag: "https://cdn-icons-png.flaticon.com/512/330/330433.png" },
+  BRL: { name: "Real Brasileiro", symbol: "R$", flag: "https://cdn-icons-png.flaticon.com/512/330/330430.png" },
 }
 
-// Histórico de conversões
-const conversionHistory = []
-
-// Taxas de câmbio (simuladas)
-const exchangeRates = {
-  USD: 0.2,
-  EUR: 0.18,
-  GBP: 0.16,
-  JPY: 30.42,
-  ARS: 175.5,
-  CAD: 0.27,
-  AUD: 0.31,
-  CNY: 1.45,
-}
+// Taxas de câmbio (serão preenchidas pela API)
+const exchangeRates = {}
 
 // Adicionar código para controlar o menu mobile
 const mobileMenuBtn = document.getElementById("mobile-menu-btn")
@@ -111,84 +102,359 @@ async function handleLogout() {
 
 // Formatar valor monetário
 function formatCurrency(value, currency) {
-  const formatter = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: currency,
-    minimumFractionDigits: 2,
+  // Verificar se o código da moeda é válido
+  if (!currency || typeof currency !== "string" || currency.length !== 3) {
+    // Fallback para BRL se o código da moeda for inválido
+    return new Intl.NumberFormat("pt-BR", {
+      style: "decimal",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value)
+  }
+
+  try {
+    const formatter = new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: currency,
+      minimumFractionDigits: 2,
+    })
+    return formatter.format(value)
+  } catch (error) {
+    // Em caso de erro, retornar um formato numérico simples
+    console.warn(`Erro ao formatar moeda ${currency}:`, error)
+    return `${value.toFixed(2)} ${currency}`
+  }
+}
+
+// Formatar data para exibição
+function formatDate(dateString) {
+  const date = new Date(dateString)
+
+  // Formatar data (dia/mês/ano)
+  const formattedDate = date.toLocaleDateString("pt-BR")
+
+  // Formatar hora (hora:minuto)
+  const formattedTime = date.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
   })
-  return formatter.format(value)
+
+  return {
+    fullDate: `${formattedDate} às ${formattedTime}`,
+    date: formattedDate,
+    time: formattedTime,
+    relativeTime: getRelativeTime(date),
+  }
+}
+
+// Obter tempo relativo (ex: "há 5 minutos", "hoje", "ontem")
+function getRelativeTime(date) {
+  const now = new Date()
+  const diffMs = now - date
+  const diffSec = Math.floor(diffMs / 1000)
+  const diffMin = Math.floor(diffSec / 60)
+  const diffHour = Math.floor(diffMin / 60)
+  const diffDay = Math.floor(diffHour / 24)
+
+  if (diffSec < 60) {
+    return "agora mesmo"
+  } else if (diffMin < 60) {
+    return `há ${diffMin} ${diffMin === 1 ? "minuto" : "minutos"}`
+  } else if (diffHour < 24) {
+    return `há ${diffHour} ${diffHour === 1 ? "hora" : "horas"}`
+  } else if (diffDay === 1) {
+    return "ontem"
+  } else if (diffDay < 7) {
+    return `há ${diffDay} dias`
+  } else {
+    return date.toLocaleDateString("pt-BR")
+  }
 }
 
 // Atualizar informações da moeda selecionada
 function updateCurrencyInfo(currency) {
   const currencyData = currencies[currency]
+  if (!currencyData) return
+
   currencyNameElement.textContent = currencyData.name
   currencyCodeElement.textContent = currency
-  currencyFlagElement.innerHTML = `<span style="font-size: 24px;">${currencyData.flag}</span>`
+
+  // Usando imagem para todas as moedas agora
+  currencyFlagElement.innerHTML = `<img src="${currencyData.flag}" alt="${currency} flag" style="width: 46px; height: 55px; object-fit: contain; border-radius: 60%;">`
 }
 
-// Converter valor
-function convertCurrency() {
-  const amount = Number.parseFloat(amountInput.value) || 0
-  const currency = currencySelect.value
-  const rate = exchangeRates[currency]
+// Modificar a função convertCurrency para salvar no Supabase e buscar taxas em tempo real
+async function convertCurrency() {
+  try {
+    const amount = Number.parseFloat(amountInput.value) || 0
+    const currency = currencySelect.value
 
-  const convertedValue = amount * rate
-
-  resultValue.textContent = formatCurrency(convertedValue, currency)
-  exchangeRateElement.textContent = `1 BRL = ${rate.toFixed(4)} ${currency}`
-
-  // Adicionar ao histórico
-  if (amount > 0) {
-    const conversion = {
-      date: new Date(),
-      from: "BRL",
-      to: currency,
-      amount: amount,
-      result: convertedValue,
+    if (amount <= 0) {
+      resultValue.textContent = "Digite um valor válido"
+      return
     }
 
-    conversionHistory.unshift(conversion)
+    // Mostrar estado de carregamento
+    resultValue.textContent = "Calculando..."
+    convertBtn.disabled = true
+    convertBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...'
 
-    // Limitar histórico a 5 itens
-    if (conversionHistory.length > 5) {
-      conversionHistory.pop()
+    // Buscar taxa atualizada da API
+    const response = await fetch(`https://open.er-api.com/v6/latest/BRL`)
+
+    if (!response.ok) {
+      throw new Error("Falha ao buscar taxa atualizada")
     }
 
-    updateConversionHistory()
+    const data = await response.json()
+
+    if (!data.rates || !data.rates[currency]) {
+      throw new Error("Taxa não disponível para esta moeda")
+    }
+
+    // Obter a taxa de câmbio (quanto da moeda estrangeira você obtém por 1 BRL)
+    const rate = data.rates[currency]
+
+    // Atualizar a taxa no objeto local
+    exchangeRates[currency] = rate
+
+    // Calcular o valor convertido
+    const convertedValue = amount * rate
+
+    // Atualizar a interface
+    resultValue.textContent = formatCurrency(convertedValue, currency)
+    exchangeRateElement.textContent = `1 BRL = ${rate.toFixed(4)} ${currency}`
+
+    // Salvar a conversão no Supabase
+    if (amount > 0) {
+      const { data: user } = await supabase.auth.getUser()
+
+      if (user) {
+        // Verificar a estrutura da tabela antes de inserir
+        const { data: tableInfo, error: tableError } = await supabase.from("conversions").select("*").limit(1)
+
+        if (tableError) {
+          console.error("Erro ao verificar tabela:", tableError)
+          // Tentar criar a tabela se ela não existir
+          await createConversionsTable()
+        }
+
+        // Adaptar os campos para a estrutura da tabela
+        const conversionData = {
+          user_id: user.user.id,
+          amount: amount,
+          source_currency: "BRL",
+          target_currency: currency,
+          converted_amount: convertedValue,
+          created_at: new Date().toISOString(),
+        }
+
+        const { error } = await supabase.from("conversions").insert(conversionData)
+
+        if (error) {
+          console.error("Erro ao salvar conversão:", error)
+        } else {
+          // Atualizar o histórico após salvar
+          await updateConversionHistory()
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Erro na conversão:", error)
+    resultValue.textContent = "Erro na conversão"
+  } finally {
+    // Restaurar o botão
+    convertBtn.disabled = false
+    convertBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Converter'
   }
 }
 
-// Atualizar histórico de conversões
-function updateConversionHistory() {
+// Adicionar função para criar a tabela conversions se necessário
+async function createConversionsTable() {
+  try {
+    // Não podemos criar tabelas diretamente via cliente, então vamos apenas
+    // mostrar uma mensagem de erro mais informativa
+    console.error(`
+  A tabela 'conversions' não existe ou tem uma estrutura diferente.
+  Por favor, crie a tabela no painel do Supabase com a seguinte estrutura:
+  
+  CREATE TABLE conversions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL,
+    amount NUMERIC NOT NULL,
+    source_currency TEXT NOT NULL,
+    target_currency TEXT NOT NULL,
+    converted_amount NUMERIC NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  );
+  
+  ALTER TABLE conversions ENABLE ROW LEVEL SECURITY;
+  
+  CREATE POLICY "Users can view their own conversions"
+    ON conversions
+    FOR SELECT
+    USING (auth.uid() = user_id);
+    
+  CREATE POLICY "Users can insert their own conversions"
+    ON conversions
+    FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+`)
+  } catch (error) {
+    console.error("Erro ao tentar criar tabela:", error)
+  }
+}
+
+// Função para buscar histórico de conversões do Supabase
+async function updateConversionHistory() {
   if (!conversionHistoryElement) return
 
-  conversionHistoryElement.innerHTML = ""
+  try {
+    conversionHistoryElement.innerHTML =
+      '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando histórico...</div>'
 
-  if (conversionHistory.length === 0) {
-    conversionHistoryElement.innerHTML = `
-      <div class="history-item">
-        <div class="history-details">
-          <span>Nenhuma conversão realizada ainda</span>
+    const { data: user } = await supabase.auth.getUser()
+
+    if (!user) {
+      conversionHistoryElement.innerHTML = `
+        <div class="history-item">
+          <div class="history-details">
+            <span>Faça login para ver seu histórico</span>
+          </div>
         </div>
-      </div>
-    `
-    return
-  }
+      `
+      return
+    }
 
-  conversionHistory.forEach((conversion) => {
-    const date = new Date(conversion.date).toLocaleString("pt-BR")
-    const historyItem = document.createElement("div")
-    historyItem.className = "history-item"
-    historyItem.innerHTML = `
-      <div class="history-details">
-        <span class="history-date">${date}</span>
-        <span class="history-conversion">${conversion.amount.toFixed(2)} ${conversion.from} → ${conversion.to}</span>
+    // Buscar as últimas 5 conversões do usuário
+    const { data, error } = await supabase
+      .from("conversions")
+      .select("*")
+      .eq("user_id", user.user.id)
+      .order("created_at", { ascending: false })
+      .limit(5)
+
+    if (error) {
+      throw error
+    }
+
+    conversionHistoryElement.innerHTML = ""
+
+    if (!data || data.length === 0) {
+      conversionHistoryElement.innerHTML = `
+        <div class="history-empty">
+          <i class="fas fa-history history-empty-icon"></i>
+          <p>Nenhuma conversão realizada ainda</p>
+          <small>Suas conversões aparecerão aqui</small>
+        </div>
+      `
+      return
+    }
+
+    data.forEach((conversion) => {
+      const formattedDate = formatDate(conversion.created_at)
+      const fromCurrency = conversion.source_currency || "BRL"
+      const toCurrency = conversion.target_currency || "USD"
+
+      // Obter dados das moedas
+      const fromCurrencyData = currencies[fromCurrency] || {
+        flag: "https://cdn-icons-png.flaticon.com/512/330/330430.png",
+        name: "Real Brasileiro",
+      }
+      const toCurrencyData = currencies[toCurrency] || {
+        flag: "https://cdn-icons-png.flaticon.com/512/330/330430.png",
+        name: toCurrency,
+      }
+
+      // Criar o elemento HTML para o item do histórico
+      const historyItem = document.createElement("div")
+      historyItem.className = "history-item"
+
+      // Usando imagem para todas as moedas
+      const fromFlagHtml = `<img src="${fromCurrencyData.flag}" alt="${fromCurrency} flag" style="width: 46px; height: 55px; object-fit: contain; border-radius: 60%;">`
+      const toFlagHtml = `<img src="${toCurrencyData.flag}" alt="${toCurrency} flag" style="width: 46px; height: 55px; object-fit: contain; border-radius: 60%;">`
+
+      historyItem.innerHTML = `
+        <div class="history-item-header">
+          <div class="history-date">
+            <i class="fas fa-clock"></i>
+            <span title="${formattedDate.fullDate}">${formattedDate.relativeTime}</span>
+          </div>
+          <div class="history-actions">
+            <button class="history-action-btn" title="Repetir conversão" data-amount="${conversion.amount}" data-currency="${toCurrency}">
+              <i class="fas fa-redo-alt"></i>
+            </button>
+          </div>
+        </div>
+        <div class="history-item-content">
+          <div class="history-currencies">
+            <div class="history-currency from">
+              <span class="currency-flag">${fromFlagHtml}</span>
+              <div class="currency-info">
+                <span class="currency-amount">${conversion.amount.toFixed(2)}</span>
+                <span class="currency-code">${fromCurrency}</span>
+              </div>
+            </div>
+            <div class="history-arrow">
+              <i class="fas fa-long-arrow-alt-right"></i>
+            </div>
+            <div class="history-currency to">
+              <span class="currency-flag">${toFlagHtml}</span>
+              <div class="currency-info">
+                <span class="currency-amount">${conversion.converted_amount.toFixed(2)}</span>
+                <span class="currency-code">${toCurrency}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+
+      // Adicionar event listener para o botão de repetir conversão
+      const repeatBtn = historyItem.querySelector(".history-action-btn")
+      if (repeatBtn) {
+        repeatBtn.addEventListener("click", () => {
+          const amount = repeatBtn.getAttribute("data-amount")
+          const currency = repeatBtn.getAttribute("data-currency")
+
+          // Preencher o formulário com os valores da conversão
+          if (amountInput) amountInput.value = amount
+          if (currencySelect) {
+            // Selecionar a moeda no dropdown
+            for (let i = 0; i < currencySelect.options.length; i++) {
+              if (currencySelect.options[i].value === currency) {
+                currencySelect.selectedIndex = i
+                break
+              }
+            }
+            // Atualizar informações da moeda
+            updateCurrencyInfo(currency)
+          }
+
+          // Executar a conversão
+          convertCurrency()
+        })
+      }
+
+      conversionHistoryElement.appendChild(historyItem)
+    })
+  } catch (error) {
+    console.error("Erro ao buscar histórico:", error)
+    conversionHistoryElement.innerHTML = `
+      <div class="history-error">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>Erro ao carregar histórico</p>
+        <button id="retry-history" class="retry-btn">
+          <i class="fas fa-redo"></i> Tentar novamente
+        </button>
       </div>
-      <div class="history-value">${formatCurrency(conversion.result, conversion.to)}</div>
     `
-    conversionHistoryElement.appendChild(historyItem)
-  })
+
+    // Adicionar event listener para o botão de tentar novamente
+    const retryBtn = document.getElementById("retry-history")
+    if (retryBtn) {
+      retryBtn.addEventListener("click", updateConversionHistory)
+    }
+  }
 }
 
 // Atualizar taxas populares
@@ -197,18 +463,40 @@ function updatePopularRates() {
 
   popularRatesElement.innerHTML = ""
 
+  // Pegar as 4 primeiras moedas para exibir
   const popularCurrencies = ["USD", "EUR", "GBP", "JPY"]
+
+  if (Object.keys(exchangeRates).length === 0) {
+    popularRatesElement.innerHTML = `
+      <div class="rate-card">
+        <div class="rate-info">
+          <div class="currency-flag">
+            <i class="fas fa-spinner fa-spin"></i>
+          </div>
+          <div class="currency-details">
+            <span class="name">Carregando...</span>
+          </div>
+        </div>
+      </div>
+    `
+    return
+  }
 
   popularCurrencies.forEach((currency) => {
     const rate = exchangeRates[currency]
     const currencyData = currencies[currency]
+
+    if (!rate || !currencyData) return
+
+    // Usando imagem para todas as moedas
+    const flagHtml = `<img src="${currencyData.flag}" alt="${currency} flag" style="width: 46px; height: 55px; object-fit: contain; border-radius: 60%;">`
 
     const rateCard = document.createElement("div")
     rateCard.className = "rate-card"
     rateCard.innerHTML = `
       <div class="rate-info">
         <div class="currency-flag">
-          <span style="font-size: 24px;">${currencyData.flag}</span>
+          ${flagHtml}
         </div>
         <div class="currency-details">
           <span class="name">${currencyData.name}</span>
@@ -221,31 +509,89 @@ function updatePopularRates() {
   })
 }
 
-// Simular atualização de taxas
-function simulateRateUpdate() {
-  // Simular pequenas variações nas taxas
-  Object.keys(exchangeRates).forEach((currency) => {
-    const variation = (Math.random() - 0.5) * 0.01 // Variação de até 0.5%
-    exchangeRates[currency] *= 1 + variation
-  })
+// Função para buscar taxas de câmbio
+async function fetchExchangeRates() {
+  try {
+    // Mostrar estado de carregamento
+    lastUpdateElement.textContent = "Carregando..."
 
-  // Atualizar data da última atualização
-  const now = new Date()
-  lastUpdateElement.textContent = now.toLocaleString("pt-BR")
+    // Buscar taxas de câmbio da API
+    const response = await fetch("https://open.er-api.com/v6/latest/BRL")
 
-  // Atualizar taxas populares
-  updatePopularRates()
+    if (!response.ok) {
+      throw new Error("Falha ao buscar taxas de câmbio")
+    }
 
-  // Se houver um valor no input, recalcular
-  if (Number.parseFloat(amountInput.value) > 0) {
-    convertCurrency()
+    const data = await response.json()
+
+    if (!data.rates) {
+      throw new Error("Dados de taxas inválidos")
+    }
+
+    // Limpar taxas anteriores
+    Object.keys(exchangeRates).forEach((key) => delete exchangeRates[key])
+
+    // Preencher o select com as opções de moedas
+    if (currencySelect) {
+      currencySelect.innerHTML = ""
+    }
+
+    // Processar os dados recebidos
+    Object.keys(currencies).forEach((currency) => {
+      if (data.rates[currency]) {
+        // Armazenar a taxa de câmbio
+        exchangeRates[currency] = data.rates[currency]
+
+        // Adicionar ao select
+        if (currencySelect) {
+          const option = document.createElement("option")
+          option.value = currency
+          option.textContent = `${currencies[currency].name} (${currency})`
+          currencySelect.appendChild(option)
+        }
+      }
+    })
+
+    // Atualizar a interface
+    const now = new Date()
+    lastUpdateElement.textContent = now.toLocaleString("pt-BR")
+
+    // Atualizar informações da moeda selecionada
+    if (currencySelect && currencySelect.value) {
+      updateCurrencyInfo(currencySelect.value)
+    }
+
+    // Atualizar taxas populares
+    updatePopularRates()
+
+    // Atualizar o histórico de conversões
+    await updateConversionHistory()
+
+    return true
+  } catch (error) {
+    console.error("Erro ao buscar taxas de câmbio:", error)
+    lastUpdateElement.textContent = "Erro ao atualizar taxas"
+    return false
   }
 }
 
 // Inicializar a página
-function initPage() {
+async function initPage() {
   // Verificar autenticação
-  checkAuth()
+  await checkAuth()
+
+  // Verificar se a tabela conversions existe e criar se necessário
+  try {
+    const { error } = await supabase.from("conversions").select("count").limit(1)
+
+    if (error) {
+      console.error("Erro ao verificar tabela:", error)
+      // Tentar criar a tabela
+      await createConversionsTable()
+    }
+  } catch (error) {
+    console.error("Erro ao verificar tabela:", error)
+  }
 
   // Adicionar event listeners
   if (logoutBtn) {
@@ -265,19 +611,11 @@ function initPage() {
     })
   }
 
-  // Inicializar informações da moeda
-  if (currencySelect) {
-    updateCurrencyInfo(currencySelect.value)
-  }
+  // Buscar taxas de câmbio iniciais
+  await fetchExchangeRates()
 
-  // Simular primeira atualização de taxas
-  simulateRateUpdate()
-
-  // Atualizar taxas a cada 30 segundos
-  setInterval(simulateRateUpdate, 30000)
-
-  // Inicializar histórico de conversões
-  updateConversionHistory()
+  // Atualizar taxas a cada 1 hora
+  setInterval(fetchExchangeRates, 3600000)
 
   // Verificar o tamanho da tela ao redimensionar
   window.addEventListener("resize", () => {

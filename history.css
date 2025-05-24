@@ -1,0 +1,236 @@
+/* Estilos específicos para a página de histórico */
+
+.history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 20px;
+  margin-bottom: 30px;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.filter-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+
+.filter-select {
+  padding: 10px 15px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  appearance: none;
+  background-color: white;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: var(--transition);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.clear-filters-btn {
+  background-color: var(--light-gray);
+  border: none;
+  padding: 10px 15px;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+}
+
+.clear-filters-btn i {
+  margin-right: 5px;
+}
+
+.clear-filters-btn:hover {
+  background-color: var(--border-color);
+}
+
+/* Tabela de histórico */
+.history-table-container {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.history-table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 14px;
+}
+
+.history-table tbody tr {
+  transition: var(--transition);
+}
+
+.history-table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.currency-cell {
+  display: flex;
+  align-items: center;
+}
+
+.currency-cell .currency-flag {
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  margin-right: 8px;
+  background: none;
+}
+
+.action-cell {
+  display: flex;
+  gap: 5px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 5px;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.action-btn:hover {
+  color: var(--accent-color);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.action-btn.repeat {
+  color: var(--accent-color);
+}
+
+.action-btn.delete {
+  color: var(--error-color);
+}
+
+.loading-cell {
+  text-align: center;
+  padding: 30px !important;
+}
+
+/* Paginação */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination-btn {
+  background-color: white;
+  border: 1px solid var(--border-color);
+  padding: 8px 15px;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+}
+
+.pagination-btn i {
+  font-size: 12px;
+}
+
+.pagination-btn i:first-child {
+  margin-right: 5px;
+}
+
+.pagination-btn i:last-child {
+  margin-left: 5px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: var(--light-gray);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+  .filter-group {
+    min-width: 150px;
+  }
+
+  .history-table-container {
+    overflow-x: auto;
+  }
+
+  .history-table {
+    min-width: 800px;
+  }
+}
+
+@media (max-width: 768px) {
+  .history-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pagination-info {
+    order: -1;
+    margin-bottom: 10px;
+  }
+}
+
